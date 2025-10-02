@@ -2,7 +2,18 @@
 
 #### 一个功能强大的网易Minecraft组件注入器
 
-
+<div align="center">
+    <img src="https://img.shields.io/github/last-commit/slfftz2011/NeteaseModInjector2" alt="GitHub last commit"/>
+    <img src="https://img.shields.io/github/commit-activity/w/slfftz2011/NeteaseModInjector2" alt="GitHub commit activity"/>
+    <img src="https://img.shields.io/github/contributors/slfftz2011/NeteaseModInjector2" alt="GitHub contributors"/>
+    <br>
+    <img src="https://img.shields.io/github/languages/code-size/slfftz2011/NeteaseModInjector2" alt="GitHub code size in bytes"/>
+    <img src="https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/slfftz2011/NeteaseModInjector2/badge?filter=.cpp$&label=lines%20of%20code&color=blue" alt="GitHub lines of code"/>
+    <br>
+    <img alt="Total Downloads" src="https://img.shields.io/packagist/dt/slfftz2011/NeteaseModInjector2">
+    <img alt="Latest Version" src="https://img.shields.io/packagist/v/slfftz2011/NeteaseModInjector2">
+    <img alt="License" src="https://img.shields.io/github/license/slfftz2011/NeteaseModInjector2">
+</div>
 
 ---
 
