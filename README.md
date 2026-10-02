@@ -1,25 +1,29 @@
-# Netease Mod Injector 2
 
-#### 一个功能强大的网易Minecraft组件注入器
+<h1 align="center">Netease Mod Injector 2</h1>
+<p align="center">一个功能强大的网易Minecraft组件注入器.</p>
 
 <div align="center">
-    <img src="https://img.shields.io/github/last-commit/slfftz2011/NeteaseModInjector2" alt="GitHub last commit"/>
-    <img src="https://img.shields.io/github/commit-activity/w/slfftz2011/NeteaseModInjector2" alt="GitHub commit activity"/>
-    <img src="https://img.shields.io/github/contributors/slfftz2011/NeteaseModInjector2" alt="GitHub contributors"/>
-    <br>
-    <img src="https://img.shields.io/github/languages/code-size/slfftz2011/NeteaseModInjector2" alt="GitHub code size in bytes"/>
-    <img src="https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/slfftz2011/NeteaseModInjector2/badge?filter=.cpp$&label=lines%20of%20code&color=blue" alt="GitHub lines of code"/>
-    <br>
-    <img alt="Total Downloads" src="https://img.shields.io/packagist/dt/slfftz2011/NeteaseModInjector2">
-    <img alt="Latest Version" src="https://img.shields.io/packagist/v/slfftz2011/NeteaseModInjector2">
-    <img alt="License" src="https://img.shields.io/github/license/slfftz2011/NeteaseModInjector2">
+
+[![Language](https://img.shields.io/badge/c++-blue)]()
+
+[![Github last commit](https://img.shields.io/github/last-commit/slfftz2011/NeteaseModInjector2)](https://github.com/slfftz2011/NeteaseModInjector2/commits/)
+[![Github commit activity](https://img.shields.io/github/commit-activity/w/slfftz2011/NeteaseModInjector2)](https://github.com/slfftz2011/NeteaseModInjector2/activity/)
+[![Github contributors](https://img.shields.io/github/contributors/slfftz2011/NeteaseModInjector2)](https://github.com/slfftz2011/NeteaseModInjector2/contributors/)
+
+![Github code size](https://img.shields.io/github/languages/code-size/slfftz2011/NeteaseModInjector2)
+![GitHub repo size](https://img.shields.io/github/repo-size/slfftz2011/NeteaseModInjector2)
+![Github lines of code](https://5ezz6jithh.execute-api.us-east-1.amazonaws.com/prod/lambda-shield-redirect?user=slfftz2011&repo=NeteaseModInjector2)
+
+[![GitHub Downloads](https://img.shields.io/github/downloads/slfftz2011/NeteaseModInjector2/total)](https://github.com/slfftz2011/NeteaseModInjector2/releases/)
+[![GitHub Tag](https://img.shields.io/github/v/tag/slfftz2011/NeteaseModInjector2)](https://github.com/slfftz2011/NeteaseModInjector2/releases/)
+![GitHub Repo stars](https://img.shields.io/github/stars/slfftz2011/NeteaseModInjector2)
 </div>
 
 ---
 
 ### 简介
 
-ModInjector2 是网易Minecraft组件注入器的第二代版本，相比第一代，它支持组件包(.COP)文件，提供更安全和完整的mod注入体验。
+ModInjector2 是网易Minecraft组件注入器的第二代版本，相比[第一代](https://github.com/slfftz2011/NeteaseModInjector2/tree/v1)，它支持组件包(.COP)文件，提供更安全和完整的mod注入体验。
 
 ### 新特性 (v2.0.0)
 
@@ -36,8 +40,10 @@ ModInjector2 是网易Minecraft组件注入器的第二代版本，相比第一�
 
 **密码: `1145`**
 
+- [全部版本](https://github.com/slfftz2011/NeteaseModInjector2/releases)
 - [v2.0.0-rc1](https://wwxd.lanzouw.com/iBV0X37haaxg)
-- [v2.0.0-rc2]() <- *待发布*
+- [v2.0.0-rc2](https://slfftz2011.lanzouw.com/izLWH4an452j)
+- [v2.0.0-rc3](https://slfftz2011.lanzouw.com/ic4Co4an4dch)
 - 埋头苦干ing...
 
 ### 构建
@@ -65,17 +71,17 @@ cmake --build cmake-build --config Release
 
 1. 首先灰常感谢 **闪烁的红石君** 提供技术支持 （->[点此支持原作者](https://mc.netease.com/forum.php?mod=viewthread&tid=990081&page=1&ordertype=1#pid5040389)<-）
 
+  > 注：链接已失效
+
+感谢 [MciMirror](https://www.mcimirror.top/) 提供国内Modrinth/CurseForge信息镜像服务
+
 2. 第二代终于来了！相比第一代，第二代支持组件包，验证完整性，还有备份功能，更安全可靠。
 
 3. 如果发现bug或想为这个项目添砖加瓦，可以[提交问题](https://github.com/slfftz2011/ModInjector2/issues/new)和[创建拉取请求](https://github.com/slfftz2011/ModInjector2/compare)，在此万分感谢
 
-
-#### 关于组件包
-
-未来一段时间我会把开发者客户端做出来，届时你们就可以快速制作分享了
-
-当然，如果你非常想要的话，联系我，给你定制一个（邮箱：`slfftz520@163.com`)
+4. 本项目现已作为 [Ibuprofen Loader（即Netease Mod Loader 3）](https://github.com/slfftz2011/Ibuprofen-Loader)的纯终端版本（c++）以及功能测试项目进行维护，适用不需要前端UI的用户及开发者使用，存在大量实验性功能，如有Bug提交 [Issues](https://github.com/slfftz2011/NeteaseModInjector2/issues)，在未来的某一天将 **不再维护并归档** !
 
 ---
 
 - 持续更新中... ——25/10/2 11:45
+- 突然诈尸! ——26/10/2 12:54
