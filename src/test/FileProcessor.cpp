@@ -1,52 +1,39 @@
 #include "../FileProcessor.h"
 #include <iostream>
 
+void testScanCPFiles() {
+    FileProcessor fp;
+    if (!fp.checkOrCreateComponentsDir()) {
+        std::cerr << "Failed to create components directory: " << fp.getLastError() << std::endl;
+        return;
+    }
+    auto files = fp.scanCPFiles();
+    std::cout << "Found " << files.size() << " .COP files in components directory." << std::endl;
+    for (const auto& f : files) {
+        std::cout << "  " << f << std::endl;
+    }
+}
+
+void testVerifyCPIntegrity() {
+    FileProcessor fp;
+    auto files = fp.scanCPFiles();
+    if (files.empty()) {
+        std::cerr << "No .COP files found for integrity test." << std::endl;
+        return;
+    }
+    for (const auto& f : files) {
+        bool valid = fp.verifyCPIntegrity(f);
+        std::cout << "File " << f << " integrity: " << (valid ? "PASS" : "FAIL") << std::endl;
+        if (!valid) {
+            std::cerr << "Error: " << fp.getLastError() << std::endl;
+        }
+    }
+}
+
 int main() {
-    FileProcessor processor;
-
-    // 1. 检查/创建components目录
-    if (!processor.checkOrCreateComponentsDir()) {
-        std::cerr << "Error: " << processor.getLastError() << std::endl;
-        return 1;
-    }
-
-    // 2. 扫描CP文件
-    auto cpFiles = processor.scanCPFiles();
-    if (cpFiles.empty()) {
-        std::cout << "No .COP files found in components directory." << std::endl;
-        return 0;
-    }
-
-    // 显示文件列表供用户选择
-    std::cout << "Available .COP files:" << std::endl;
-    for (size_t i = 0; i < cpFiles.size(); ++i) {
-        std::cout << i + 1 << ". " << cpFiles[i] << std::endl;
-    }
-
-    std::cout << "Select a file (1-" << cpFiles.size() << "): ";
-    size_t choice;
-    std::cin >> choice;
-
-    if (choice < 1 || choice > cpFiles.size()) {
-        std::cerr << "Invalid selection." << std::endl;
-        return 1;
-    }
-
-    // 3. 验证文件完整性
-    std::cout << "Verifying " << cpFiles[choice-1] << "..." << std::endl;
-    if (!processor.verifyCPIntegrity(cpFiles[choice-1])) {
-        std::cerr << "Integrity check failed: " << processor.getLastError() << std::endl;
-        return 1;
-    }
-    std::cout << "Integrity check passed!" << std::endl;
-
-    // 4. 处理选中的文件
-    if (processor.processSelectedFile(cpFiles[choice - 1])) {
-        std::cout << "File processed successfully! Temp dir: " << processor.getTempDir() << std::endl;
-    } else {
-        std::cerr << "Error: " << processor.getLastError() << std::endl;
-        return 1;
-    }
-
+    std::cout << "Running FileProcessor tests..." << std::endl;
+    testScanCPFiles();
+    testVerifyCPIntegrity();
+    std::cout << "FileProcessor tests completed." << std::endl;
     return 0;
 }

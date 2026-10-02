@@ -1,8 +1,11 @@
+
 #ifndef MODINJECTOR2_INJECTOR_H
 #define MODINJECTOR2_INJECTOR_H
 
+
 #pragma once
 #include <fstream>
+#include <string>
 
 class Injector {
 public:
@@ -18,10 +21,15 @@ public:
     Injector();
 
     static bool copyDirectory(const std::string& source, const std::string& dest);
+    bool deployDirectories(const std::string& sourceRoot);
 
     static bool waitForLogDeletion(const std::string& logPath);
 
-    void backupDirectories();
+    bool backupDirectories();
+    std::string getLastError() const;
+
+private:
+    std::string lastError;
 };
 
 

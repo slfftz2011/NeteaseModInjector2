@@ -173,7 +173,7 @@ NetworkChecker::ConnectionStatus NetworkChecker::platformCheckStatus() {
     if (platformPingTest("8.8.8.8")) {
         return ConnectionStatus::CONNECTED;
     }
-    lastError = "无法连接到互联网";
+    lastError = "Unable to connect to the internet";
     return ConnectionStatus::DISCONNECTED;
 #endif
 }

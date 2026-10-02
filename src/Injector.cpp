@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <shellapi.h>
+#include <filesystem>
 
 #include "RegistryReader.h"
 
@@ -61,6 +62,31 @@ bool Injector::copyDirectory(const std::string& source, const std::string& dest)
     return true;
 }
 
+bool Injector::deployDirectories(const std::string& sourceRoot) {
+    const std::pair<std::string, std::string> directories[] = {
+        {sourceRoot + "\\mods", modsDest},
+        {sourceRoot + "\\config", configDest},
+        {sourceRoot + "\\resourcepacks", resourceDest}
+    };
+
+    for (const auto& [source, destination] : directories) {
+        try {
+            if (!std::filesystem::exists(source)) {
+                continue;
+            }
+        } catch (const std::filesystem::filesystem_error& error) {
+            lastError = "检查部署目录失败: " + std::string(error.what());
+            return false;
+        }
+
+        if (!copyDirectory(source, destination)) {
+            lastError = "部署目录失败: " + source + " (Windows error " + std::to_string(GetLastError()) + ")";
+            return false;
+        }
+    }
+    return true;
+}
+
 // 等待日志文件被删除（最多900秒）
 bool Injector::waitForLogDeletion(const std::string& logPath) {
     for (int i = 0; i < 900; ++i) {
@@ -74,10 +100,34 @@ bool Injector::waitForLogDeletion(const std::string& logPath) {
 }
 
 // 备份现有目录
-void Injector::backupDirectories() {
+bool Injector::backupDirectories() {
     std::cout << "正在备份现有文件...\n";
-    copyDirectory(modsDest, modsBackup);
-    copyDirectory(configDest, configBackup);
-    copyDirectory(resourceDest, resourceBackup);
+    const std::pair<std::string, std::string> directories[] = {
+        {modsDest, modsBackup},
+        {configDest, configBackup},
+        {resourceDest, resourceBackup}
+    };
+
+    for (const auto& [source, backup] : directories) {
+        try {
+            if (!std::filesystem::exists(source)) {
+                continue;
+            }
+        } catch (const std::filesystem::filesystem_error& error) {
+            lastError = "检查备份目录失败: " + std::string(error.what());
+            return false;
+        }
+
+        if (!copyDirectory(source, backup)) {
+            lastError = "备份目录失败: " + source + " (Windows error " + std::to_string(GetLastError()) + ")";
+            return false;
+        }
+    }
+
     std::cout << "备份完成\n";
+    return true;
+}
+
+std::string Injector::getLastError() const {
+    return lastError;
 }
