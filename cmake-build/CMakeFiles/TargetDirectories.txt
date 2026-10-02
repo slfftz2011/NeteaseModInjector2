@@ -1,0 +1,3 @@
+C:/Users/81840/Documents/MyProject/ModInjector2/cmake-build/CMakeFiles/ModInjector2.dir
+C:/Users/81840/Documents/MyProject/ModInjector2/cmake-build/CMakeFiles/edit_cache.dir
+C:/Users/81840/Documents/MyProject/ModInjector2/cmake-build/CMakeFiles/rebuild_cache.dir

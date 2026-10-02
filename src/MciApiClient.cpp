@@ -1,5 +1,8 @@
 #include "MciApiClient.h"
 
+#include <charconv>
+#include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -42,6 +45,18 @@ bool containsString(const Json& array, const std::string& value) {
         }
     }
     return false;
+}
+
+std::string curseForgeLoaderId(const std::string& loader) {
+    std::string normalized = loader;
+    for (char& character : normalized) {
+        character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+    }
+    if (normalized == "forge") return "1";
+    if (normalized == "fabric") return "4";
+    if (normalized == "quilt") return "5";
+    if (normalized == "neoforge") return "6";
+    return {};
 }
 }
 
@@ -199,6 +214,113 @@ std::vector<MciVersion> MciApiClient::getProjectVersions(
     }
 }
 
+std::vector<MciCurseForgeProject> MciApiClient::searchCurseForgeMods(
+    const std::string& query,
+    const std::string& gameVersion) {
+    lastError.clear();
+    std::string url = "https://mod.mcimirror.top/curseforge/v1/mods/search?gameId=432&classId=6&pageSize=20&searchFilter=" +
+        encodePathSegment(query);
+    if (!gameVersion.empty()) {
+        url += "&gameVersion=" + encodePathSegment(gameVersion);
+    }
+
+    const std::string body = get(url);
+    if (body.empty()) {
+        return {};
+    }
+
+    try {
+        const Json response = Json::parse(body);
+        if (!response.contains("data") || !response["data"].is_array()) {
+            lastError = "MCI CurseForge 搜索响应格式无效";
+            return {};
+        }
+
+        std::vector<MciCurseForgeProject> projects;
+        for (const auto& item : response["data"]) {
+            if (!item.contains("id") || !item["id"].is_number_integer() || !hasString(item, "name")) {
+                continue;
+            }
+            MciCurseForgeProject project;
+            project.id = std::to_string(item["id"].get<long long>());
+            project.title = item["name"].get<std::string>();
+            if (hasString(item, "summary")) {
+                project.summary = item["summary"].get<std::string>();
+            }
+            if (item.contains("authors") && item["authors"].is_array() && !item["authors"].empty() &&
+                hasString(item["authors"][0], "name")) {
+                project.author = item["authors"][0]["name"].get<std::string>();
+            }
+            if (item.contains("downloadCount") && item["downloadCount"].is_number_integer()) {
+                project.downloads = item["downloadCount"].get<long long>();
+            }
+            projects.push_back(std::move(project));
+        }
+        return projects;
+    } catch (const Json::exception& error) {
+        lastError = "解析 MCI CurseForge 搜索响应失败: " + std::string(error.what());
+        return {};
+    }
+}
+
+std::vector<MciCurseForgeFile> MciApiClient::getCurseForgeFiles(
+    const std::string& projectId,
+    const std::string& gameVersion,
+    const std::string& loader) {
+    lastError.clear();
+    std::string url = "https://mod.mcimirror.top/curseforge/v1/mods/" +
+        encodePathSegment(projectId) + "/files?pageSize=50";
+    if (!gameVersion.empty()) {
+        url += "&gameVersion=" + encodePathSegment(gameVersion);
+    }
+    if (!loader.empty()) {
+        const std::string loaderId = curseForgeLoaderId(loader);
+        if (loaderId.empty()) {
+            lastError = "不支持的 CurseForge 加载器: " + loader;
+            return {};
+        }
+        url += "&modLoaderType=" + loaderId;
+    }
+
+    const std::string body = get(url);
+    if (body.empty()) {
+        return {};
+    }
+
+    try {
+        const Json response = Json::parse(body);
+        if (!response.contains("data") || !response["data"].is_array()) {
+            lastError = "MCI CurseForge 文件响应格式无效";
+            return {};
+        }
+
+        std::vector<MciCurseForgeFile> files;
+        for (const auto& item : response["data"]) {
+            if (!item.contains("id") || !item["id"].is_number_integer() || !hasString(item, "fileName")) {
+                continue;
+            }
+            MciCurseForgeFile file;
+            file.id = std::to_string(item["id"].get<long long>());
+            file.fileName = item["fileName"].get<std::string>();
+            if (hasString(item, "displayName")) {
+                file.displayName = item["displayName"].get<std::string>();
+            }
+            if (item.contains("gameVersions") && item["gameVersions"].is_array()) {
+                for (const auto& gameVersionItem : item["gameVersions"]) {
+                    if (gameVersionItem.is_string()) {
+                        file.gameVersions.push_back(gameVersionItem.get<std::string>());
+                    }
+                }
+            }
+            files.push_back(std::move(file));
+        }
+        return files;
+    } catch (const Json::exception& error) {
+        lastError = "解析 MCI CurseForge 文件响应失败: " + std::string(error.what());
+        return {};
+    }
+}
+
 bool MciApiClient::downloadFile(
     const std::string& projectId,
     const std::string& versionId,
@@ -213,6 +335,38 @@ bool MciApiClient::downloadFile(
 
     const std::string url = "https://mod.mcimirror.top/data/" + encodePathSegment(projectId) +
         "/versions/" + encodePathSegment(versionId) + "/" + encodePathSegment(fileName);
+    return downloadUrlToFile(url, fileName, savedPath);
+}
+
+bool MciApiClient::downloadCurseForgeFile(
+    const std::string& fileId,
+    const std::string& fileName,
+    std::string& savedPath) {
+    lastError.clear();
+    if (fileName.empty() || fileName == "." || fileName == ".." ||
+        fileName.find('/') != std::string::npos || fileName.find('\\') != std::string::npos) {
+        lastError = "MCI 返回了无效文件名";
+        return false;
+    }
+
+    std::uint64_t numericFileId = 0;
+    const auto parseResult = std::from_chars(fileId.data(), fileId.data() + fileId.size(), numericFileId);
+    if (parseResult.ec != std::errc{} || parseResult.ptr != fileId.data() + fileId.size()) {
+        lastError = "MCI 返回了无效 CurseForge 文件 ID";
+        return false;
+    }
+
+    std::ostringstream fileIdSuffix;
+    fileIdSuffix << std::setw(3) << std::setfill('0') << (numericFileId % 1000);
+    const std::string url = "https://mod.mcimirror.top/files/" + std::to_string(numericFileId / 1000) +
+        "/" + fileIdSuffix.str() + "/" + encodePathSegment(fileName);
+    return downloadUrlToFile(url, fileName, savedPath);
+}
+
+bool MciApiClient::downloadUrlToFile(
+    const std::string& url,
+    const std::string& fileName,
+    std::string& savedPath) {
     HINTERNET rawSession = InternetOpenA(
         "ModInjector2/2.0", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!rawSession) {

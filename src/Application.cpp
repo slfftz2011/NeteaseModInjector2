@@ -166,7 +166,7 @@ private:
 
             std::cout << "功能菜单:\n";
             std::cout << "1. 开始注入组件\n";
-            std::cout << "2. 从 MCI 搜索并下载 Modrinth 模组\n";
+            std::cout << "2. 从 MCI 搜索并下载模组 (Modrinth/CurseForge)\n";
             std::cout << "3. 退出工具\n\n";
             std::cout << "请选择(1-3): ";
 
@@ -208,10 +208,15 @@ private:
     }
 
     int downloadFromMci() {
+        const int platform = readSelection("平台: 1. Modrinth  2. CurseForge  0.取消: ", 2);
+        if (platform <= 0) {
+            return OPERATION_CANCELLED;
+        }
+
         std::string query;
         std::string gameVersion;
         std::string loader;
-        std::cout << "Modrinth 搜索词: ";
+        std::cout << "搜索词: ";
         std::getline(std::cin, query);
         if (query.empty()) {
             std::cout << "搜索词不能为空。\n";
@@ -222,6 +227,10 @@ private:
         std::getline(std::cin, gameVersion);
         std::cout << "加载器 fabric/forge/neoforge/quilt (留空不筛选): ";
         std::getline(std::cin, loader);
+
+        if (platform == 2) {
+            return downloadCurseForge(query, gameVersion, loader);
+        }
 
         std::cout << "正在查询 MCI...\n";
         const auto projects = mciClient.searchMods(query, gameVersion, loader);
@@ -276,6 +285,61 @@ private:
         std::string savedPath;
         if (!mciClient.downloadFile(project.id, version.id, version.files[fileIndex].fileName, savedPath)) {
             std::cerr << "下载失败: " << mciClient.getLastError() << "\n";
+            system("pause");
+            return OPERATION_FAILED;
+        }
+        std::cout << "下载完成: " << savedPath << "\n";
+        system("pause");
+        return SUCCESS;
+    }
+
+    int downloadCurseForge(
+        const std::string& query,
+        const std::string& gameVersion,
+        const std::string& loader) {
+        std::cout << "正在查询 MCI CurseForge...\n";
+        const auto projects = mciClient.searchCurseForgeMods(query, gameVersion);
+        if (projects.empty()) {
+            std::cerr << "CurseForge 搜索失败或没有结果: " << mciClient.getLastError() << "\n";
+            system("pause");
+            return OPERATION_FAILED;
+        }
+        for (size_t index = 0; index < projects.size(); ++index) {
+            std::cout << index + 1 << ". " << projects[index].title << " by "
+                      << projects[index].author << " (" << projects[index].downloads << " downloads)\n";
+        }
+        int selection = readSelection("选择项目 (0取消): ", static_cast<int>(projects.size()));
+        if (selection <= 0) {
+            return OPERATION_CANCELLED;
+        }
+
+        const MciCurseForgeProject& project = projects[static_cast<size_t>(selection - 1)];
+        const auto files = mciClient.getCurseForgeFiles(project.id, gameVersion, loader);
+        if (files.empty()) {
+            std::cerr << "没有匹配文件: " << mciClient.getLastError() << "\n";
+            system("pause");
+            return OPERATION_FAILED;
+        }
+
+        size_t fileIndex = 0;
+        if (files.size() > 1) {
+            for (size_t index = 0; index < files.size(); ++index) {
+                const std::string& label = files[index].displayName.empty()
+                    ? files[index].fileName
+                    : files[index].displayName;
+                std::cout << index + 1 << ". " << label << " [" << files[index].fileName << "]\n";
+            }
+            selection = readSelection("选择文件 (0取消): ", static_cast<int>(files.size()));
+            if (selection <= 0) {
+                return OPERATION_CANCELLED;
+            }
+            fileIndex = static_cast<size_t>(selection - 1);
+        }
+
+        std::string savedPath;
+        const auto& file = files[fileIndex];
+        if (!mciClient.downloadCurseForgeFile(file.id, file.fileName, savedPath)) {
+            std::cerr << "CurseForge 下载失败: " << mciClient.getLastError() << "\n";
             system("pause");
             return OPERATION_FAILED;
         }

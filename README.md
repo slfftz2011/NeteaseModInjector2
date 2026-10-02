@@ -28,7 +28,7 @@ ModInjector2 是网易Minecraft组件注入器的第二代版本，相比第一�
 - **备份功能**: 注入前自动备份现有文件
 - **改进的错误处理**: 更详细的错误信息和用户反馈
 - **网络检查**: 自动检测网络连接状态
-- **MCI 联机下载**: 搜索 Modrinth 项目、按版本和加载器筛选并通过 MCI CDN 下载文件
+- **MCI 联机下载**: 搜索 Modrinth/CurseForge 项目、按游戏版本和加载器筛选并通过 MCI CDN 下载文件
 
 ### 下载
 
@@ -42,14 +42,14 @@ ModInjector2 是网易Minecraft组件注入器的第二代版本，相比第一�
 
 ### 构建
 
-需要 CMake、Ninja 和 MinGW-w64，构建命令如下：
+需要 CMake 3.20+、Ninja 和 MinGW-w64，并确保 `g++`、`windres`、`cmake`、`ninja` 在 `PATH` 中。在项目根目录运行：
 
 ```bash
 cmake -S . -B cmake-build -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_RC_COMPILER=windres
 cmake --build cmake-build --config Release
 ```
 
-也可以使用 Visual Studio 的 CMake 生成器。程序菜单中的 MCI 下载会将文件保存到 `downloads/MCI/`。
+生成的程序位于 `cmake-build/bin/ModInjector2.exe`。也可以使用 Visual Studio 的 CMake 生成器。菜单中的 MCI 下载支持 Modrinth 和 CurseForge，文件保存到 `downloads/MCI/`。
 
 ### 使用方法
 

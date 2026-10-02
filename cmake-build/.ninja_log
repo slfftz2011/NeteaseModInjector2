@@ -1,0 +1,14 @@
+# ninja log v7
+10	3264	8126122014620541	CMakeFiles/ModInjector2.dir/main.cpp.obj	4cbef011c3edbf01
+257	3275	8126122017093904	CMakeFiles/ModInjector2.dir/src/RegistryReader.cpp.obj	c379fc5f8daaf0d3
+160	3279	8126122016126864	CMakeFiles/ModInjector2.dir/src/ConsoleOutput.cpp.obj	9acb0071a4a170bd
+240	4016	8126122016942616	CMakeFiles/ModInjector2.dir/src/NetworkChecker.cpp.obj	9d7baf333c8e243f
+196	4019	8126122016494646	CMakeFiles/ModInjector2.dir/src/Injector.cpp.obj	ba59d1e5e537c8ba
+183	4351	8126122016356698	CMakeFiles/ModInjector2.dir/src/GameDeployer.cpp.obj	84d6e7d3e6d3f6e9
+23	4469	8126122014758371	CMakeFiles/ModInjector2.dir/resource.rc.obj	bdeab0beb01a28c7
+149	6318	8126122016024233	CMakeFiles/ModInjector2.dir/src/Application.cpp.obj	fa0c830cbd1851f
+208	6449	8126122016620496	CMakeFiles/ModInjector2.dir/src/JsonParser.cpp.obj	aeb4bf3088488a2d
+274	6928	8126122017277105	CMakeFiles/ModInjector2.dir/src/URLOpener.cpp.obj	bd46b02b50a724e3
+169	6944	8126122016228898	CMakeFiles/ModInjector2.dir/src/FileProcessor.cpp.obj	34cd1ee867e2cfca
+224	8163	8126122016774511	CMakeFiles/ModInjector2.dir/src/MciApiClient.cpp.obj	ecd6726f64069b2c
+8164	8742	8126122096167633	bin/ModInjector2.exe	386c7dd42c3b6039

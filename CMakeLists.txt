@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(ModInjector2 VERSION 2.0.0 LANGUAGES CXX RC)
+set(PROJECT_VERSION_FULL "2.0.0-rc2")
 
 if(NOT WIN32)
     message(FATAL_ERROR "ModInjector2 currently supports Windows only.")
