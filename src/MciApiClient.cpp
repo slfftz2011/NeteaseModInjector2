@@ -161,8 +161,15 @@ std::vector<MciVersion> MciApiClient::getProjectVersions(
     const std::string& gameVersion,
     const std::string& loader) {
     lastError.clear();
-    const std::string url = "https://mod.mcimirror.top/modrinth/v2/project/" +
+    std::string url = "https://mod.mcimirror.top/modrinth/v2/project/" +
         encodePathSegment(projectId) + "/version";
+    if (!gameVersion.empty()) {
+        url += "?game_versions=" + encodePathSegment(Json::array({gameVersion}).dump());
+    }
+    if (!loader.empty()) {
+        url += (url.find('?') == std::string::npos ? "?" : "&") +
+            std::string("loaders=") + encodePathSegment(Json::array({loader}).dump());
+    }
     const std::string body = get(url);
     if (body.empty()) {
         return {};

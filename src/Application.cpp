@@ -13,12 +13,14 @@
 #include <windows.h>
 
 #include "FileProcessor.h"
+#include "GameVersionList.h"
 #include "Injector.h"
 #include "JsonParser.h"
 #include "MciApiClient.h"
 #include "NetworkChecker.h"
 #include "RegistryReader.h"
 #include "URLOpener.h"
+#include "ConsoleOutput.h"
 
 namespace {
 constexpr short NO_DIRECTORY = -255;
@@ -35,7 +37,7 @@ constexpr short SUCCESS = 0;
 constexpr short CONTINUE = 1;
 
 const std::string AUTHOR = "SLFFTZ520";
-const std::string VERSION = "v2.0.0";
+const std::string VERSION = PROJECT_VERSION_FULL;
 const std::string GITHUB = "https://github.com/slfftz2011";
 const std::string WATT_TOOLKIT = "https://steampp.net/";
 const std::string LOG_TRIGGER = "3401765#JuwLBFt";
@@ -114,8 +116,8 @@ private:
         }
 
         if (!NetworkChecker::checkWebsiteReachable(GITHUB)) {
-            std::cout << "\n    [警告] 测试连接失败，或许可以考虑使用加速器\n";
-            std::cout << "    1.不需要 2.去开加速器 3.了解加速器并下载 (1-3): ";
+            std::cout << "\n    [警告] 测试连接失败，或许可以考虑使用加速器/本地代理\n";
+            std::cout << "    1.不需要 2.去开加速器 3.了解Watt Toolkit并前往下载 (1-3): ";
             const char key = _getch();
             switch (key) {
             case '2':
@@ -197,7 +199,7 @@ private:
     int readSelection(const std::string& prompt, int maximum) {
         std::cout << prompt;
         std::string input;
-        std::getline(std::cin, input);
+        readUtf8Line(input);
         int selection = -1;
         const auto result = std::from_chars(input.data(), input.data() + input.size(), selection);
         if (result.ec != std::errc{} || result.ptr != input.data() + input.size() ||
@@ -205,6 +207,30 @@ private:
             return -1;
         }
         return selection;
+    }
+
+    std::string chooseGameVersion() {
+        std::cout << "目标 Minecraft 版本:\n";
+        for (size_t index = 0; index < game_versions::supported.size(); ++index) {
+            const auto version = game_versions::supported[index];
+            std::cout << index + 1 << ". " << version;
+            if (game_versions::usesNeoForge(version)) {
+                std::cout << " (NeoForge)";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "0. 输入其他版本\n";
+        const int selection = readSelection("选择版本: ", static_cast<int>(game_versions::supported.size()));
+        if (selection < 0) {
+            return {};
+        }
+        if (selection == 0) {
+            std::string version;
+            std::cout << "输入版本号 (例如 1.20.1): ";
+            readUtf8Line(version);
+            return game_versions::isValid(version) ? version : std::string{};
+        }
+        return std::string(game_versions::supported[static_cast<size_t>(selection - 1)]);
     }
 
     int downloadFromMci() {
@@ -217,16 +243,16 @@ private:
         std::string gameVersion;
         std::string loader;
         std::cout << "搜索词: ";
-        std::getline(std::cin, query);
+        readUtf8Line(query);
         if (query.empty()) {
             std::cout << "搜索词不能为空。\n";
             system("pause");
             return OPERATION_CANCELLED;
         }
         std::cout << "Minecraft 版本 (留空不筛选): ";
-        std::getline(std::cin, gameVersion);
+        readUtf8Line(gameVersion);
         std::cout << "加载器 fabric/forge/neoforge/quilt (留空不筛选): ";
-        std::getline(std::cin, loader);
+        readUtf8Line(loader);
 
         if (platform == 2) {
             return downloadCurseForge(query, gameVersion, loader);
@@ -371,7 +397,7 @@ private:
 
         std::cout << "\n请选择需要验证的组件(1-" << components.size() << "，0取消): ";
         std::string choiceInput;
-        std::getline(std::cin, choiceInput);
+        readUtf8Line(choiceInput);
         std::cout << choiceInput << "\n";
 
         int choice = 0;
@@ -403,6 +429,12 @@ private:
             return FILE_VERIFY_FAILED;
         }
 
+        const std::string gameVersion = chooseGameVersion();
+        if (gameVersion.empty()) {
+            std::cout << "未选择有效版本，已取消。\n";
+            return OPERATION_CANCELLED;
+        }
+
         bool verifySuccess = true;
         const std::vector<std::string> folders = {"mods", "config", "resourcepacks"};
         for (const auto& folder : folders) {
@@ -429,28 +461,46 @@ private:
             }
         }
 
+        if (!injectorInstance.prepareVersionDeployment(tempUnzipDir, gameVersion)) {
+            std::cerr << "[错误] " << injectorInstance.getLastError() << "\n";
+            system("pause");
+            return OPERATION_FAILED;
+        }
+
         if (!injectorInstance.backupDirectories()) {
             std::cerr << "[错误] " << injectorInstance.getLastError() << "\n";
             system("pause");
             return OPERATION_FAILED;
         }
 
-        std::ofstream logFile(injectorInstance.logPath);
-        if (!logFile.is_open()) {
-            std::cerr << "[错误] 创建日志文件失败！\n";
+        if (!injectorInstance.createLogTrigger(injectorInstance.logPath, LOG_TRIGGER) ||
+            !injectorInstance.createLogTrigger(injectorInstance.neoForgeLogPath, LOG_TRIGGER)) {
+            std::cerr << "[错误] " << injectorInstance.getLastError() << "\n";
             system("pause");
             return OPERATION_FAILED;
         }
-        logFile << LOG_TRIGGER;
 
-        std::cout << "\n等待中...请启动游戏\n\n";
-        if (!Injector::waitForLogDeletion(injectorInstance.logPath)) {
+        std::cout << "\n等待游戏删除对应目录中的日志标记...请启动游戏\n\n";
+        bool primaryDeleted = false;
+        bool neoForgeDeleted = false;
+        if (!Injector::waitForAnyLogDeletion(
+                injectorInstance.logPath,
+                injectorInstance.neoForgeLogPath,
+                primaryDeleted,
+                neoForgeDeleted)) {
             std::cout << "[错误] 超时未检测到游戏启动\n";
             system("pause");
             return TIME_OUT;
         }
 
-        if (!injectorInstance.deployDirectories(tempUnzipDir)) {
+        bool deployed = true;
+        if (primaryDeleted) {
+            deployed = injectorInstance.deployDirectories(tempUnzipDir);
+        }
+        if (deployed && neoForgeDeleted) {
+            deployed = injectorInstance.deployNeoForgeDirectories(tempUnzipDir);
+        }
+        if (!deployed) {
             std::cerr << "[错误] " << injectorInstance.getLastError() << "\n";
             std::cerr << "请检查游戏目录权限和磁盘空间。备份位于游戏目录的 *_backup 文件夹。\n";
             system("pause");

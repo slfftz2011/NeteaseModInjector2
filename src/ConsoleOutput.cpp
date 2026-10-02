@@ -99,3 +99,37 @@ void initializeConsoleOutput() {
     std::cout.rdbuf(&stdoutBuffer);
     std::cerr.rdbuf(&stderrBuffer);
 }
+
+bool readUtf8Line(std::string& line) {
+    line.clear();
+    HANDLE inputHandle = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+    if (!GetConsoleMode(inputHandle, &mode)) {
+        return static_cast<bool>(std::getline(std::cin, line));
+    }
+
+    std::vector<wchar_t> wideBuffer(32768);
+    DWORD charactersRead = 0;
+    if (!ReadConsoleW(inputHandle, wideBuffer.data(), static_cast<DWORD>(wideBuffer.size()),
+                      &charactersRead, nullptr)) {
+        return false;
+    }
+    while (charactersRead > 0 &&
+           (wideBuffer[charactersRead - 1] == L'\r' || wideBuffer[charactersRead - 1] == L'\n')) {
+        --charactersRead;
+    }
+    if (charactersRead == 0) {
+        return true;
+    }
+
+    const int utf8Length = WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, wideBuffer.data(), static_cast<int>(charactersRead),
+        nullptr, 0, nullptr, nullptr);
+    if (utf8Length <= 0) {
+        return false;
+    }
+    line.resize(static_cast<size_t>(utf8Length));
+    return WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, wideBuffer.data(), static_cast<int>(charactersRead),
+        line.data(), utf8Length, nullptr, nullptr) == utf8Length;
+}

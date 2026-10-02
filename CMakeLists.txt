@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(ModInjector2 VERSION 2.0.0 LANGUAGES CXX RC)
-set(PROJECT_VERSION_FULL "2.0.0-rc2")
+set(PROJECT_VERSION_FULL "2.0.0-rc3")
+include(CTest)
 
 if(NOT WIN32)
     message(FATAL_ERROR "ModInjector2 currently supports Windows only.")
@@ -23,6 +24,9 @@ add_executable(ModInjector2
 )
 
 target_compile_features(ModInjector2 PRIVATE cxx_std_17)
+target_compile_definitions(ModInjector2 PRIVATE
+    PROJECT_VERSION_FULL="${PROJECT_VERSION_FULL}"
+)
 target_include_directories(ModInjector2 PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -61,3 +65,10 @@ target_link_libraries(ModInjector2 PRIVATE
 set_target_properties(ModInjector2 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+
+if(BUILD_TESTING)
+    add_executable(GameVersionRoutingTest src/test/GameVersionRouting.cpp)
+    target_include_directories(GameVersionRoutingTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_compile_features(GameVersionRoutingTest PRIVATE cxx_std_17)
+    add_test(NAME GameVersionRoutingTest COMMAND GameVersionRoutingTest)
+endif()
